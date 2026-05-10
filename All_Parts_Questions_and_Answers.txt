@@ -1,0 +1,165 @@
+================================================================================
+HW1_2026 - ALL REPORT QUESTIONS & ANSWERS
+================================================================================
+Date: May 10, 2026
+Dataset: adult_with_pii.csv (32,561 records, 19 columns)
+
+================================================================================
+PART 1: DATA AND PRIVACY RISK ANALYSIS
+================================================================================
+
+--- QUESTION 1.3 (Report) ---
+
+Classify **every column** of the dataset into one of the four privacy roles, 
+and briefly justify your choice (1 sentence per column). Present your answer as 
+a **table** in your PDF report with the columns: `Column name`, `Privacy role`, 
+`Justification`.
+
+ANSWER FOR Q1.3:
+
+| Column Name       | Privacy Role        | Justification |
+|-------------------|---------------------|---------------|
+| Name              | Direct Identifier   | Names directly and uniquely identify individuals. |
+| DOB               | Direct Identifier   | Date of birth is a direct personal identifier. |
+| SSN               | Direct Identifier   | Social Security Numbers are unique government identifiers. |
+| Zip               | Quasi-Identifier    | Can be combined with age and sex in linkage attacks to re-identify individuals. |
+| Age               | Quasi-Identifier    | Part of the demographic quasi-identifier set (Zip+Age+Sex) used in re-identification. |
+| Workclass         | Sensitive Attribute | Employment/occupation type is personal employment information. |
+| fnlwgt            | Non-Sensitive       | Technical sampling weight variable without inherent privacy significance. |
+| Education         | Sensitive Attribute | Education level is personal educational and socioeconomic information. |
+| Education-Num     | Sensitive Attribute | Numeric encoding of education level carries the same sensitivity as Education. |
+| Marital Status    | Quasi-Identifier    | Marital status can narrow re-identification when combined with other demographics. |
+| Occupation        | Sensitive Attribute | Specific occupation details are personal employment information. |
+| Relationship      | Non-Sensitive       | General categorical variable indicating family relationship with low privacy risk. |
+| Race              | Quasi-Identifier    | Demographic attribute that aids re-identification when combined with other QIs. |
+| Sex               | Quasi-Identifier    | Part of the standard demographic quasi-identifier set (Zip+Age+Sex). |
+| Capital Gain      | Sensitive Attribute | Financial information revealing investment/income details. |
+| Capital Loss      | Sensitive Attribute | Financial information revealing investment/loss details. |
+| Hours per week    | Sensitive Attribute | Employment hours are personal work-related information. |
+| Country           | Quasi-Identifier    | Geographic location can narrow down population for re-identification. |
+| Target            | Sensitive Attribute | Income level is the primary sensitive attribute in this dataset. |
+
+================================================================================
+
+--- QUESTION 1.5 (Report) ---
+
+You have just removed all direct identifiers — `df_no_pii` cannot be tied to a 
+named individual by a single column. Yet privacy harm is still possible.
+
+Describe **two distinct concrete privacy harms** that could result from 
+publishing `df_no_pii` (i.e., the dataset *after* direct identifiers have been 
+removed, but with no further protection). The two harms must be **different in 
+kind** — not two examples of the same underlying mechanism.
+
+For each harm explain:
+
+(a) **Who is harmed** — which individuals or groups in the dataset?
+
+(b) **What additional information** the attacker needs (if any) beyond the 
+released dataset, and how plausible it is that they have it.
+
+(c) **What the actual harm consists of** — be specific (e.g., re-identification, 
+attribute disclosure, group-level inference, discrimination, etc.).
+
+Generic statements like "privacy is violated" do not count.
+
+ANSWER FOR Q1.5:
+
+HARM 1: Re-Identification via Linkage Attack (Attribute Disclosure)
+────────────────────────────────────────────────────────────────────
+
+(a) **Who is harmed**: 
+Individuals in the dataset whose demographic combination (specifically Zip + Age 
++ Sex) is sufficiently rare or distinctive to be uniquely matched with external 
+public records. This is particularly severe for individuals with uncommon 
+demographic combinations. Research by Latanya Sweeney (1997) showed that about 
+87% of the US population can be re-identified using Zip + Date of Birth + Sex 
+alone.
+
+(b) **What additional information the attacker needs**:
+The attacker needs access to external public or semi-public datasets containing 
+demographic information such as:
+  - Voter registration rolls (publicly available in most US states)
+  - Census bureau microdata or aggregated census records
+  - Public social media profiles linking names to demographics
+  - Telephone directories or address databases
+  - Professional directories (LinkedIn, academic directories)
+  
+These sources are widely accessible and plausible for attackers to obtain. 
+Voter registration databases can often be purchased cheaply or accessed for a 
+small fee. Social media data can be scraped. This information availability is 
+well-documented in privacy research.
+
+(c) **What the actual harm consists of**:
+This is **re-identification followed by attribute disclosure**. Once an 
+attacker matches a record in df_no_pii to an external record using the Zip+Age+Sex 
+quasi-identifiers, they can identify the real name and personal details of the 
+individual. Then, they can infer sensitive attributes from the dataset such as:
+  - The individual's exact income level (from Target column)
+  - Educational background
+  - Occupation
+  - Financial information (capital gains/losses)
+  - Work hours
+
+The harm manifests as:
+  - **Privacy violation**: The individual's sensitive information is now linked 
+    to their real identity without consent.
+  - **Targeted discrimination**: An employer, insurer, or lender could use this 
+    information to discriminate against the individual.
+  - **Harassment or stalking**: Bad actors could use re-identified information 
+    for targeted harassment.
+  - **Financial harm**: Information could be sold to third parties or used for 
+    predatory targeting.
+
+Example: An attacker could identify that a specific named person (matched via 
+Zip+Age+Sex) has high capital gains and low education, enabling wage 
+discrimination or targeted scams.
+
+HARM 2: Group-Level Attribute Inference & Demographic Targeting/Discrimination
+────────────────────────────────────────────────────────────────────────────────
+
+(a) **Who is harmed**:
+Groups of individuals defined by combinations of quasi-identifiers 
+(e.g., all females aged 25-35 in zip code 02118, or all individuals in a 
+specific workclass-education combination). The harm affects the group collectively 
+and individuals within it through discrimination based on group statistics.
+
+(b) **What additional information the attacker needs**:
+**No additional external information is required.** The attacker only needs the 
+released df_no_pii dataset itself. They can directly query, filter, and analyze 
+the data to extract group-level statistics without needing to re-identify 
+individuals.
+
+(c) **What the actual harm consists of**:
+This is **group-level attribute inference and demographic targeting**, distinct 
+from individual re-identification. Even without knowing individual identities, 
+an attacker can:
+
+1. **Extract group statistics**: Filter rows by quasi-identifiers (e.g., "Sex==F 
+   AND Age in [25,35] AND Zip==02118") and compute aggregate statistics such as:
+     - Average income in that demographic group
+     - Distribution of occupations
+     - Education levels most common in that group
+     - Employment patterns and work hours
+
+2. **Enable discrimination**: Employers, lenders, insurers, or marketers can use 
+   these group-level inferences to:
+     - Deny opportunities to entire demographic groups based on group statistics
+     - Charge higher premiums to risky groups
+     - Target predatory lending or marketing to groups with high debt
+     - Implement discriminatory hiring practices
+
+3. **Unfair statistical inference**: Even though individual identities are not 
+   revealed, statements like "85% of unmarried women aged 30-40 in this zip code 
+   earn <$50K" can lead to unfair assumptions and discrimination.
+
+4. **Intersectional harm**: Groups defined by intersecting quasi-identifiers 
+   (e.g., "non-white females in tech roles") can face amplified discrimination 
+   based on revealed group patterns.
+
+Example: A credit card company could analyze df_no_pii to find that individuals 
+in a specific zip code + race + age combination have high capital losses. They 
+could then refuse to grant credit to anyone matching those demographic criteria, 
+even if that individual has good credit history—a discriminatory practice enabled 
+by the group-level inference.
+
