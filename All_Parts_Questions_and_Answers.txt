@@ -163,3 +163,68 @@ could then refuse to grant credit to anyone matching those demographic criteria,
 even if that individual has good credit history—a discriminatory practice enabled 
 by the group-level inference.
 
+
+================================================================================
+PART 2: k-ANONYMITY
+================================================================================
+
+--- QUESTION 2.4c (Report) ---
+
+Compare the three numbers `n_unique`, `n_unique_no_zip`, `n_unique_no_age`. 
+Which of the three QIs (`Zip`, `Age`, `Sex`) carries the **most identifying 
+power** in this dataset, and why? Briefly relate your answer to a practical 
+decision: *if the research team has only enough "utility budget" to generalize 
+one QI aggressively, which one should they choose?*
+
+ANSWER FOR Q2.4c:
+
+**Data Summary:**
+
+The three identifiability metrics from the linkage attack analysis are:
+
+- `n_unique` (full QI: {Zip, Age, Sex}):    32,457 uniquely identifiable (99.68%)
+- `n_unique_no_zip` ({Age, Sex} only):      5 uniquely identifiable (0.02%)
+- `n_unique_no_age` ({Zip, Sex} only):      27,086 uniquely identifiable (83.13%)
+
+**Which QI carries the most identifying power: ZIP CODE**
+
+**Why Zip is most identifying:**
+
+1. **Magnitude of impact**: Removing Zip code from the quasi-identifier set 
+   reduces re-identification risk from 99.68% to just 0.02%—a drop of 99.66 
+   percentage points. This is an enormous collapse in identifying power.
+
+2. **Contrast with other QIs**: By comparison:
+   - Removing Age only reduces risk from 99.68% to 83.13% (a 16.55 percentage 
+     point drop)
+   - Sex contributes similarly to Age via its role in the QI combination
+
+3. **Why Zip dominates**: Zip codes are geographically precise identifiers with 
+   sparse distributions. Each zip code covers a limited geographic area with a 
+   specific set of residents. When combined with Sex (a binary attribute), Zip 
+   creates fine-grained equivalence classes. In contrast, Age is a relatively 
+   coarse attribute with many people sharing the same age, and Sex is binary 
+   (only two values globally).
+
+4. **Quasi-identifier interaction**: While the full QI set {Zip, Age, Sex} 
+   achieves 99.68% identifiability, the dominance of Zip is evident: {Zip, Sex} 
+   alone already achieves 83.13% identifiability, whereas {Age, Sex} achieves 
+   only 0.02%.
+
+**Practical Recommendation for Privacy Budget Allocation:**
+
+If the research team has only enough "utility budget" to aggressively generalize 
+ONE quasi-identifier, they should prioritize **ZIP CODE**. 
+
+The reasoning:
+- Zip generalization (e.g., truncation to 3-digit prefix, or grouping into 
+  broader regions) directly addresses the dominant source of identifying power.
+- This single generalization would reduce re-identification risk from 99.68% to 
+  ~0.02%, achieving near-complete privacy protection with minimal additional 
+  utility loss from generalizing Age and Sex.
+- Conversely, if they generalized only Age, the risk would remain at 83% due to 
+  {Zip, Sex} combinations. If they generalized only Sex, the risk would also 
+  remain very high.
+- Zip generalization is thus the highest-impact, most cost-effective privacy 
+  intervention they can make.
+
