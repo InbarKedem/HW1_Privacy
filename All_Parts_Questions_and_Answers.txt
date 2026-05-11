@@ -294,3 +294,48 @@ Re-run generalization/suppression with k>=50 (or higher) instead of k>=5, ensuri
 Cost: Much higher suppression rate (potentially >70% of records removed), severely limiting dataset utility.
 
 ================================================================================
+
+================================================================================
+PART 3: DIFFERENTIAL PRIVACY: LAPLACE MECHANISM
+================================================================================
+
+--- QUESTION 3.2 (Report) ---
+
+True count of males: 21,790.
+
+--- QUESTION 3.3 (Report) ---
+
+Noisy male count (ε=1, Laplace, sensitivity=1): 21,789.711 (single realization).
+Method: add Laplace noise with scale = sensitivity/ε = 1/1.
+
+--- QUESTION 3.4 (Report) ---
+
+True sum of Capital Gain for males: 28,966,974.
+
+--- QUESTION 3.5 (Report) ---
+
+Clipped male Capital Gain sum and DP noisy sum: each individual's `Capital Gain` was clipped to [0,100000] to bound sensitivity; the global sensitivity of the sum is therefore 100,000. Using ε=1 and the Laplace mechanism (scale = 100000/1) produced a noisy clipped sum (single realization): 29,198,671.425.
+
+--- QUESTION 3.6 (Report) ---
+
+Why clipping?
+- Clipping enforces a known, data-independent bound so the global sensitivity is finite and noise can be calibrated.
+- Trade-off: clipping introduces bias (reduces the influence of large true values) but prevents arbitrarily large sensitivity and limits DP noise magnitude. Choosing the clipping bound balances worst-case influence and utility.
+
+--- QUESTION 3.7 (Report) ---
+
+Empirical mean absolute relative error vs ε (1000 trials, male count, sensitivity=1):
+- ε=0.01: 0.004598845
+- ε=0.1 : 0.000470263
+- ε=1.0 : 0.000046900
+- ε=10.0: 0.000004500
+
+These are empirical results from repeated Laplace draws; errors decrease approximately proportional to ε.
+
+--- QUESTION 3.8 (Report) ---
+
+Effect of halving ε:
+- Halving ε doubles the Laplace noise scale (sensitivity/ε), so the expected absolute error approximately doubles and variance increases accordingly. Accuracy degrades significantly as ε decreases; e.g., moving from ε=1.0 to ε=0.5 would roughly double the mean absolute error observed above.
+
+================================================================================
+
