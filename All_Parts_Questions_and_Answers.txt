@@ -163,3 +163,134 @@ could then refuse to grant credit to anyone matching those demographic criteria,
 even if that individual has good credit history—a discriminatory practice enabled 
 by the group-level inference.
 
+
+================================================================================
+PART 2: k-ANONYMITY
+================================================================================
+
+--- QUESTION 2.4c (Report) ---
+
+Compare the three numbers `n_unique`, `n_unique_no_zip`, `n_unique_no_age`. 
+Which of the three QIs (`Zip`, `Age`, `Sex`) carries the **most identifying 
+power** in this dataset, and why? Briefly relate your answer to a practical 
+decision: *if the research team has only enough "utility budget" to generalize 
+one QI aggressively, which one should they choose?*
+
+ANSWER FOR Q2.4c:
+
+**Data Summary:**
+
+The three identifiability metrics from the linkage attack analysis are:
+
+- `n_unique` (full QI: {Zip, Age, Sex}):    32,457 uniquely identifiable (99.68%)
+- `n_unique_no_zip` ({Age, Sex} only):      5 uniquely identifiable (0.02%)
+- `n_unique_no_age` ({Zip, Sex} only):      27,086 uniquely identifiable (83.13%)
+
+**Which QI carries the most identifying power: ZIP CODE**
+
+**Why Zip is most identifying:**
+
+1. **Magnitude of impact**: Removing Zip code from the quasi-identifier set 
+   reduces re-identification risk from 99.68% to just 0.02%—a drop of 99.66 
+   percentage points. This is an enormous collapse in identifying power.
+
+2. **Contrast with other QIs**: By comparison:
+   - Removing Age only reduces risk from 99.68% to 83.13% (a 16.55 percentage 
+     point drop)
+   - Sex contributes similarly to Age via its role in the QI combination
+
+3. **Why Zip dominates**: Zip codes are geographically precise identifiers with 
+   sparse distributions. Each zip code covers a limited geographic area with a 
+   specific set of residents. When combined with Sex (a binary attribute), Zip 
+   creates fine-grained equivalence classes. In contrast, Age is a relatively 
+   coarse attribute with many people sharing the same age, and Sex is binary 
+   (only two values globally).
+
+4. **Quasi-identifier interaction**: While the full QI set {Zip, Age, Sex} 
+   achieves 99.68% identifiability, the dominance of Zip is evident: {Zip, Sex} 
+   alone already achieves 83.13% identifiability, whereas {Age, Sex} achieves 
+   only 0.02%.
+
+**Practical Recommendation for Privacy Budget Allocation:**
+
+If the research team has only enough "utility budget" to aggressively generalize 
+ONE quasi-identifier, they should prioritize **ZIP CODE**. 
+
+The reasoning:
+- Zip generalization (e.g., truncation to 3-digit prefix, or grouping into 
+  broader regions) directly addresses the dominant source of identifying power.
+- This single generalization would reduce re-identification risk from 99.68% to 
+  ~0.02%, achieving near-complete privacy protection with minimal additional 
+  utility loss from generalizing Age and Sex.
+- Conversely, if they generalized only Age, the risk would remain at 83% due to 
+  {Zip, Sex} combinations. If they generalized only Sex, the risk would also 
+  remain very high.
+- Zip generalization is thus the highest-impact, most cost-effective privacy 
+  intervention they can make.
+
+
+
+================================================================================
+
+--- QUESTION 2.10b (Report) ---
+
+A downstream researcher has access to df_kanon_5 (k=5 anonymized).
+Which analyses can they perform: (1) Mean income by 10-year age band? (2) Mean income by individual age?
+
+ANSWER FOR Q2.10b:
+
+1. By 10-year age band: YES - Age_band column contains the intervals (10-19, 20-29, ..., 80-89).
+
+2. By individual age: NO - Original Age column was dropped during generalization; year-level data is lost.
+
+This reveals k-anonymity's utility cost: fine-grained temporal analysis becomes impossible once attributes are generalized.
+
+================================================================================
+
+--- QUESTION 2.10c (Report) ---
+
+If k=20 (instead of k=5): Would suppression % go UP or DOWN? Would Capital Gain difference be LARGER or SMALLER?
+
+ANSWER FOR Q2.10c:
+
+1. Suppression % would go UP: Stricter minimum group size (k>=20) means more equivalence classes fall below threshold, requiring removal of more records.
+
+2. Capital Gain difference would be LARGER: Suppressing more rows introduces greater selection bias; the removed records likely differ systematically from retained records, increasing distortion in aggregate statistics.
+
+================================================================================
+
+--- QUESTION 2.10d (Report) ---
+
+Despite k-anonymity, describe one attack scenario where an attacker can still learn sensitive information about a target individual (2-3 sentences).
+
+ANSWER FOR Q2.10d:
+
+HOMOGENEITY ATTACK: Suppose an attacker knows a target individual's {Zip, Age_band, Sex} matches an equivalence class of k=5 records in df_kanon_5. 
+If all 5 members of that equivalence class are high-income (Target = ">50K"), the attacker learns with certainty that their target earns >50K—a privacy breach called attribute disclosure. 
+This occurs because the equivalence class is homogeneous with respect to income, defeating k-anonymity protection against this form of inference.
+
+================================================================================
+
+--- QUESTION 2.11b (Report) ---
+
+Explain why adding QI columns only decreases k (never increases). If attacker knows Marital Status in addition to {Zip, Age, Sex}, does k>=5 claim still hold for df_kanon_5? Suggest two remedies.
+
+ANSWER FOR Q2.11b:
+
+PART 1: Adding QI columns subdivides the population into finer groups. Since subdivision can never merge groups, the minimum group size can only decrease or stay the same—never increase.
+
+PART 2: NO, the claim does NOT hold with Marital Status included.
+- k with {Zip, Age_band, Sex} = 5 (VALID)
+- k with {Zip, Age_band, Sex, Marital Status} = 1 (INVALID)
+
+With Marital Status as an additional QI, k drops to 1, violating the k>=5 guarantee.
+
+REMEDY 1 - GENERALIZE MARITAL STATUS:
+Group marital status values (e.g., "Married" + "Never-married" become broader categories) or suppress rare combinations.
+Cost: Loss of granularity in Marital Status analyses; downstream research on employment-marital relationships becomes coarser.
+
+REMEDY 2 - INCREASE k TARGET:
+Re-run generalization/suppression with k>=50 (or higher) instead of k>=5, ensuring implicit protection even if attackers know extended QI sets.
+Cost: Much higher suppression rate (potentially >70% of records removed), severely limiting dataset utility.
+
+================================================================================
