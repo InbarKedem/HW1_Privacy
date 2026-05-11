@@ -339,3 +339,22 @@ Effect of halving ε:
 
 ================================================================================
 
+================================================================================
+
+PART 4: SENSITIVITY IN DETAIL
+================================================================================
+
+--- QUESTION 4.2 (Report) ---
+
+For D = the empty database, mean(Age) = 0 by convention. For D′ containing a single record with Age = 120, mean(Age) = 120. This shows the global sensitivity of mean(Age) under clipped ages in [0, 120] is 120, because there exists a neighboring pair with output difference 120. The small value observed in df_no_pii is only a local, dataset-specific change, not the worst-case over all possible neighbors.
+
+--- QUESTION 4.4 (Report) ---
+
+Publishing a noise scale based on local sensitivity would leak information about the dataset itself—a small scale reveals that the dataset has low sensitivity, allowing attackers to infer structural properties of the data. More critically, neighboring datasets can have much larger sensitivity, so local sensitivity fails to provide differential privacy's requirement of a uniform privacy guarantee across all possible datasets.
+
+--- QUESTION 4.6 (Report) ---
+
+The procedure in Q5 uses ε_sum = 0.5 and ε_count = 0.5. By sequential composition, the total privacy cost is ε_sum + ε_count = 1.0. Therefore the overall DP estimate of mean(Age) for males satisfies ε = 1.0.
+
+================================================================================
+
