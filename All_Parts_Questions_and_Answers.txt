@@ -228,3 +228,69 @@ The reasoning:
 - Zip generalization is thus the highest-impact, most cost-effective privacy 
   intervention they can make.
 
+
+
+================================================================================
+
+--- QUESTION 2.10b (Report) ---
+
+A downstream researcher has access to df_kanon_5 (k=5 anonymized).
+Which analyses can they perform: (1) Mean income by 10-year age band? (2) Mean income by individual age?
+
+ANSWER FOR Q2.10b:
+
+1. By 10-year age band: YES - Age_band column contains the intervals (10-19, 20-29, ..., 80-89).
+
+2. By individual age: NO - Original Age column was dropped during generalization; year-level data is lost.
+
+This reveals k-anonymity's utility cost: fine-grained temporal analysis becomes impossible once attributes are generalized.
+
+================================================================================
+
+--- QUESTION 2.10c (Report) ---
+
+If k=20 (instead of k=5): Would suppression % go UP or DOWN? Would Capital Gain difference be LARGER or SMALLER?
+
+ANSWER FOR Q2.10c:
+
+1. Suppression % would go UP: Stricter minimum group size (k>=20) means more equivalence classes fall below threshold, requiring removal of more records.
+
+2. Capital Gain difference would be LARGER: Suppressing more rows introduces greater selection bias; the removed records likely differ systematically from retained records, increasing distortion in aggregate statistics.
+
+================================================================================
+
+--- QUESTION 2.10d (Report) ---
+
+Despite k-anonymity, describe one attack scenario where an attacker can still learn sensitive information about a target individual (2-3 sentences).
+
+ANSWER FOR Q2.10d:
+
+HOMOGENEITY ATTACK: Suppose an attacker knows a target individual's {Zip, Age_band, Sex} matches an equivalence class of k=5 records in df_kanon_5. 
+If all 5 members of that equivalence class are high-income (Target = ">50K"), the attacker learns with certainty that their target earns >50K—a privacy breach called attribute disclosure. 
+This occurs because the equivalence class is homogeneous with respect to income, defeating k-anonymity protection against this form of inference.
+
+================================================================================
+
+--- QUESTION 2.11b (Report) ---
+
+Explain why adding QI columns only decreases k (never increases). If attacker knows Marital Status in addition to {Zip, Age, Sex}, does k>=5 claim still hold for df_kanon_5? Suggest two remedies.
+
+ANSWER FOR Q2.11b:
+
+PART 1: Adding QI columns subdivides the population into finer groups. Since subdivision can never merge groups, the minimum group size can only decrease or stay the same—never increase.
+
+PART 2: NO, the claim does NOT hold with Marital Status included.
+- k with {Zip, Age_band, Sex} = 5 (VALID)
+- k with {Zip, Age_band, Sex, Marital Status} = 1 (INVALID)
+
+With Marital Status as an additional QI, k drops to 1, violating the k>=5 guarantee.
+
+REMEDY 1 - GENERALIZE MARITAL STATUS:
+Group marital status values (e.g., "Married" + "Never-married" become broader categories) or suppress rare combinations.
+Cost: Loss of granularity in Marital Status analyses; downstream research on employment-marital relationships becomes coarser.
+
+REMEDY 2 - INCREASE k TARGET:
+Re-run generalization/suppression with k>=50 (or higher) instead of k>=5, ensuring implicit protection even if attackers know extended QI sets.
+Cost: Much higher suppression rate (potentially >70% of records removed), severely limiting dataset utility.
+
+================================================================================
