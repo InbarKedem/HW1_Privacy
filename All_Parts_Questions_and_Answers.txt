@@ -30,7 +30,7 @@ ANSWER FOR Q1.3:
 | Education-Num     | Sensitive Attribute | Numeric encoding of education level carries the same sensitivity as Education. |
 | Marital Status    | Quasi-Identifier    | Marital status can narrow re-identification when combined with other demographics. |
 | Occupation        | Sensitive Attribute | Specific occupation details are personal employment information. |
-| Relationship      | Non-Sensitive       | General categorical variable indicating family relationship with low privacy risk. |
+| Relationship      | Quasi-Identifier    | Values like "Husband"/"Wife" reveal sex, marital status, and household role; when combined with other demographics this strongly aids linkage attacks and can narrow identity. |
 | Race              | Quasi-Identifier    | Demographic attribute that aids re-identification when combined with other QIs. |
 | Sex               | Quasi-Identifier    | Part of the standard demographic quasi-identifier set (Zip+Age+Sex). |
 | Capital Gain      | Sensitive Attribute | Financial information revealing investment/income details. |
@@ -322,6 +322,9 @@ Why clipping?
 - Clipping enforces a known, data-independent bound so the global sensitivity is finite and noise can be calibrated.
 - Trade-off: clipping introduces bias (reduces the influence of large true values) but prevents arbitrarily large sensitivity and limits DP noise magnitude. Choosing the clipping bound balances worst-case influence and utility.
 
+What can go wrong with data-dependent clipping bounds?
+- If the clipping bound is chosen by inspecting the dataset (for example, by setting the upper bound to `df_no_pii['Capital Gain'].max()`), that bound is itself a statistic of the data. Publishing or using such a bound without accounting for its privacy cost leaks information (e.g., the exact maximum capital gain held by some respondent). Because the clipping bound is a query on the data with non-zero sensitivity, it must either be chosen independently of the data or be released using a DP mechanism (with its own budget). Failing to do this invalidates the assumed privacy accounting and can entirely break the DP guarantee.
+
 --- QUESTION 3.7 (Report) ---
 
 Empirical mean absolute relative error vs ε (1000 trials, male count, sensitivity=1):
@@ -380,9 +383,9 @@ Answer (c): Practically we use the count-based score `u` because it yields a bou
 
 --- QUESTION 8 (Report) ---
 
-Answer (a): From the empirical accuracy curve we observed, the mechanism reaches >90% accuracy at roughly ε ≈ 0.3–0.5 range (approximately 0.9+ accuracy starting around ε ≈ 0.03-0.05 and plateau-ing near 1.0 for higher ε).  At very small ε (ε ≈ 0.001, the smallest tested), the output is close to a uniformly random guess (accuracy near the baseline random-chance level observed ≈0.15 for this candidate set).
+Answer (a): Inspecting the `epsilons = np.logspace(-3, 1, 20)` grid shows the points are spaced as \(10^{-3 + i\times(4/19)}\). From the observed `accuracies` array (for example, `[0.16, 0.245, 0.35, 0.585, 0.805, 0.955, 0.99, 1.0,...]`), the 6th entry (index 5) is 0.955. The corresponding ε at index 5 is approximately $10^{-1.947}\approx 0.011$, so the mechanism reaches >95% accuracy already around ε ≈ 0.01. By ε ≈ 0.1 (around index 9–10) the accuracy is essentially 100% on our trials, so the >90% threshold occurs much earlier than previously stated.
 
-Answer (b): Recommend ε ≈ 0.1 for this publication task.  Justification: ε ≈ 0.1 (or slightly higher) yields >90% probability of returning the true top education in our trials based on the empirical curve, providing both meaningful privacy protection and a reliable answer. While ε ≈ 0.02 only achieves ~50% accuracy (still noisy), ε ≈ 0.1 consistently gives >90% accuracy. Trade-offs: much smaller ε (e.g., 0.001–0.01) sacrifice accuracy severely; larger ε (≥1.0) provide diminishing accuracy gains. Document this choice and the empirical accuracy curve in the PDF report so reviewers can judge the privacy/utility tradeoff.
+Answer (b): Recommend ε ≈ 0.05–0.1 for publication. Justification: this range sits safely on the accuracy plateau (near 100% accuracy in our trials) while keeping the privacy budget small. Although >90% accuracy is achieved near ε ≈ 0.01, choosing ε in the 0.05–0.1 range provides extra robustness to sampling noise and minor dataset shifts while still offering a strict, low privacy cost. Document the full accuracy-vs-ε curve in the PDF report so reviewers can see the rapid utility gains at very small ε and why the recommended value is conservative yet privacy-preserving.
 
 _Write these answers in the PDF report._
 
